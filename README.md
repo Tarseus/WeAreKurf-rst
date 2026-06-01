@@ -4,13 +4,12 @@ This repository contains only the final mixed deepfake detector code used for
 the course submission:
 
 - `submission_det_ensemble/`: final mixed inference module.
-- `make_official_submission.py`: runs inference on an official UCAS test folder
-  and writes the required `.xlsx` submission.
+- `infer_dinov3_mix.py`: runs the final EfficientNet-B3 + DINOv3 mixed
+  inference on an official UCAS folder and can write the required `.xlsx`
+  submission.
 - `dinov3_dfgc_probe_ucas.py`: trains the DINOv3 linear probe used by the mix.
 - `dinov3_dfgc_alpha_search.py`: searches the EfficientNet/DINOv3 fusion
   coefficient.
-- `apply_dinov3_dfgc_probe_test1.py`: applies the trained DINOv3 probe and
-  fuses it with cached EfficientNet scores.
 - `ucas_val_tune.py`: shared official-folder parsing, label loading, AUC, and
   fusion helpers.
 
@@ -51,19 +50,21 @@ UCAS_AISA-testX/
   face_info.txt
 ```
 
-Generate a submission file:
+Generate a prediction JSON and official submission file:
 
 ```powershell
-python make_official_submission.py `
-  --team-name TeamKurfuerst `
+python infer_dinov3_mix.py `
   --data-folder path\to\UCAS_AISA-testX `
+  --submission-dir submission_det_ensemble `
+  --probe dinov3_splus_dfgc_probe_output\dinov3_dfgc21_probe.joblib `
+  --weights weights\dinov3_timm\vit_small_plus_patch16_dinov3_qkvb.lvd1689m.safetensors `
+  --alpha-eff 0.61 `
+  --team-name TeamKurfuerst `
   --result-path official_submit `
-  --module submission_det_ensemble `
-  --tta strong `
-  --batch-size 4
+  --tta strong
 ```
 
-The output is:
+The official output is:
 
 ```text
 official_submit/TeamKurfuerst.xlsx
