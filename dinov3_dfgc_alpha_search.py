@@ -6,7 +6,7 @@ import joblib
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-from dinov3_dfgc_probe_ucas import dfgc_items_and_labels
+from train_dinov3_probe import dfgc_items_and_labels
 from ucas_val_tune import logit_np, official_face_info, read_labels, sigmoid_np
 
 

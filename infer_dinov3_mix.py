@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from dinov3_dfgc_probe_ucas import extract_features, ucas_items
+from train_dinov3_probe import extract_features, ucas_items
 from ucas_val_tune import logit_np, sigmoid_np
 
 

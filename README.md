@@ -7,7 +7,7 @@ the course submission:
 - `infer_dinov3_mix.py`: runs the final EfficientNet-B3 + DINOv3 mixed
   inference on an official UCAS folder and can write the required `.xlsx`
   submission.
-- `dinov3_dfgc_probe_ucas.py`: trains the DINOv3 linear probe used by the mix.
+- `train_dinov3_probe.py`: trains the DINOv3 linear probe used by the mix.
 - `dinov3_dfgc_alpha_search.py`: searches the EfficientNet/DINOv3 fusion
   coefficient.
 - `ucas_val_tune.py`: shared official-folder parsing, label loading, AUC, and
@@ -22,8 +22,8 @@ Provide these locally when running the code:
 
 ```text
 submission_det_ensemble/efn-b3_3c_60_acc0.9975.pth
-submission_det_ensemble/dino_dfgc21_probe_ts.pt
 weights/dinov3_timm/*.safetensors
+dinov3_splus_dfgc_probe_output/dinov3_dfgc21_probe.joblib
 datasets/
 ```
 
@@ -75,7 +75,7 @@ official_submit/TeamKurfuerst.xlsx
 Example:
 
 ```powershell
-python dinov3_dfgc_probe_ucas.py `
+python train_dinov3_probe.py `
   --dfgc-root datasets\DFGC-21-extracted `
   --dfgc-json datasets\DFGC-21\bbox&landmarks.json `
   --ucas-val datasets\UCAS_AISA\extracted\val `
