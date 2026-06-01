@@ -152,7 +152,7 @@ def main():
     parser.add_argument("--dfgc-root", default="datasets/DFGC-21-extracted")
     parser.add_argument("--dfgc-json", default="datasets/DFGC-21/bbox&landmarks.json")
     parser.add_argument("--ucas-val", default="datasets/UCAS_AISA/extracted/val")
-    parser.add_argument("--eff-val-cache", default="ucas_artifact_adapter_output/feature_cache.npz")
+    parser.add_argument("--eff-val-cache", default=None)
     parser.add_argument("--model-name", default="vit_small_patch16_dinov3_qkvb.lvd1689m")
     parser.add_argument("--weights", default="vit_small_patch16_dinov3_qkvb.lvd1689m.safetensors")
     parser.add_argument("--out-dir", default="dinov3_dfgc_probe_output")
@@ -209,24 +209,29 @@ def main():
     dino3_scores = clf.predict_proba(val_features)[:, 1]
     dino3_auc = auc(val_labels, dino3_scores)
 
-    eff_cache = np.load(args.eff_val_cache, allow_pickle=True)
-    eff_names = eff_cache["img_names"].astype(str).tolist()
-    eff_scores = eff_cache["eff_views"].mean(axis=1).astype(np.float64)
-    eff_by_name = {name: score for name, score in zip(eff_names, eff_scores)}
-    eff_ordered = np.asarray([eff_by_name[name] for name in val_img_list], dtype=np.float64)
-    fusion = sigmoid_np(0.55 * logit_np(eff_ordered) + 0.45 * logit_np(dino3_scores))
-    eff_auc = auc(val_labels, eff_ordered)
-    fusion_auc = auc(val_labels, fusion)
+    eff_auc = None
+    fusion_auc = None
+    fusion = None
+    if args.eff_val_cache and Path(args.eff_val_cache).is_file():
+        eff_cache = np.load(args.eff_val_cache, allow_pickle=True)
+        eff_names = eff_cache["img_names"].astype(str).tolist()
+        eff_scores = eff_cache["eff_views"].mean(axis=1).astype(np.float64)
+        eff_by_name = {name: score for name, score in zip(eff_names, eff_scores)}
+        eff_ordered = np.asarray([eff_by_name[name] for name in val_img_list], dtype=np.float64)
+        fusion = sigmoid_np(0.55 * logit_np(eff_ordered) + 0.45 * logit_np(dino3_scores))
+        eff_auc = auc(val_labels, eff_ordered)
+        fusion_auc = auc(val_labels, fusion)
 
     joblib.dump(clf, out_dir / "dinov3_dfgc21_probe.joblib")
-    np.savez_compressed(
-        out_dir / "ucas_val_scores.npz",
-        img_names=np.asarray(val_img_list),
-        labels=val_labels,
-        eff_scores=eff_ordered,
-        dinov3_scores=dino3_scores,
-        fusion_scores=fusion,
-    )
+    score_payload = {
+        "img_names": np.asarray(val_img_list),
+        "labels": val_labels,
+        "dinov3_scores": dino3_scores,
+    }
+    if fusion is not None:
+        score_payload["eff_scores"] = eff_ordered
+        score_payload["fusion_scores"] = fusion
+    np.savez_compressed(out_dir / "ucas_val_scores.npz", **score_payload)
     summary = {
         "model_name": args.model_name,
         "weights": args.weights,
@@ -234,10 +239,11 @@ def main():
         "label_file": label_file,
         "num_dfgc_train": int(len(dfgc_labels)),
         "num_ucas_val": int(len(val_labels)),
-        "auc_efficientnet": eff_auc,
         "auc_dinov3_probe": dino3_auc,
-        "auc_eff_dinov3_default_fusion_alpha_0.55": fusion_auc,
     }
+    if eff_auc is not None:
+        summary["auc_efficientnet"] = eff_auc
+        summary["auc_eff_dinov3_default_fusion_alpha_0.55"] = fusion_auc
     (out_dir / "results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(json.dumps(summary, indent=2), flush=True)
 

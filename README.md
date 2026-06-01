@@ -1,58 +1,48 @@
-# Deepfake Detection Course Solution
+# WeAreKurf-rst Deepfake Detection Mix
 
-This repository contains code for a UCAS DeepfakesAdvTrack-style deepfake
-detection solution. It includes inference wrappers, DFGC/UCAS evaluation
-utilities, DINO feature probing scripts, and official Excel submission helpers.
+This repository contains only the final mixed deepfake detector code used for
+the course submission:
 
-Datasets, generated predictions, report artifacts, and pretrained model weights
-are intentionally not committed. See `DEEPFAKE_DETECTION_README.md` for the
-full experiment log and result summary.
+- `submission_det_ensemble/`: final mixed inference module.
+- `make_official_submission.py`: runs inference on an official UCAS test folder
+  and writes the required `.xlsx` submission.
+- `dinov3_dfgc_probe_ucas.py`: trains the DINOv3 linear probe used by the mix.
+- `dinov3_dfgc_alpha_search.py`: searches the EfficientNet/DINOv3 fusion
+  coefficient.
+- `apply_dinov3_dfgc_probe_test1.py`: applies the trained DINOv3 probe and
+  fuses it with cached EfficientNet scores.
+- `ucas_val_tune.py`: shared official-folder parsing, label loading, AUC, and
+  fusion helpers.
 
-## Repository Contents
+Datasets, generated predictions, cached features, and pretrained/trained model
+weights are intentionally not included.
 
-- `submission_det_strong/`: EfficientNet-B3 submission code.
-- `submission_det_ensemble/`: EfficientNet-B3 plus DINO probe ensemble code.
-- `make_official_submission.py`: Generates the official detection `.xlsx`
-  submission file from a UCAS test folder.
-- `evaluate_strong.py`, `eval_dfgc21_*.py`: Local and DFGC-style evaluation
-  helpers.
-- `dinov3_*.py`, `dino_*.py`: DINOv2/DINOv3 probing and fusion experiments.
-- `scripts/`: Dataset download/sync helper scripts.
+## Excluded Files
 
-## What Is Not Included
-
-The following files are excluded from Git and must be provided separately:
-
-- UCAS/DFGC/CelebDF datasets and extracted images.
-- Downloaded archives such as `Celeb-DF-v2.zip`.
-- Pretrained and trained weights such as `.pth`, `.pt`, `.ckpt`,
-  `.safetensors`, `.joblib`, and `.dat`.
-- Generated submissions, feature caches, figures, and logs.
-
-Expected checkpoint locations for the submission modules are:
+Provide these locally when running the code:
 
 ```text
-submission_det_strong/efn-b3_3c_60_acc0.9975.pth
 submission_det_ensemble/efn-b3_3c_60_acc0.9975.pth
 submission_det_ensemble/dino_dfgc21_probe_ts.pt
-weights/vit_small_patch14_dinov2_lvd142m.safetensors
 weights/dinov3_timm/*.safetensors
+datasets/
 ```
 
-## Environment
+The repository ignores archives, datasets, caches, `.xlsx` submissions, and
+model files such as `.pth`, `.pt`, `.ckpt`, `.safetensors`, `.joblib`, and
+`.npz`.
 
-Install the Python dependencies with:
+## Install
 
 ```powershell
 python -m pip install -r requirements.txt
 ```
 
-GPU inference is recommended. The scripts use CPU fallback where practical, but
-full test-set inference can be slow without CUDA.
+GPU inference is recommended.
 
-## UCAS Official Submission
+## Official Mix Inference
 
-Prepare the official detection data folder with:
+The official data folder must contain:
 
 ```text
 UCAS_AISA-testX/
@@ -61,11 +51,11 @@ UCAS_AISA-testX/
   face_info.txt
 ```
 
-Generate an Excel submission:
+Generate a submission file:
 
 ```powershell
 python make_official_submission.py `
-  --team-name YOUR_TEAM_NAME `
+  --team-name TeamKurfuerst `
   --data-folder path\to\UCAS_AISA-testX `
   --result-path official_submit `
   --module submission_det_ensemble `
@@ -73,15 +63,33 @@ python make_official_submission.py `
   --batch-size 4
 ```
 
-The output is written to:
+The output is:
 
 ```text
-official_submit/YOUR_TEAM_NAME.xlsx
+official_submit/TeamKurfuerst.xlsx
 ```
 
-## Notes
+## Train DINOv3 Probe
 
-If competition rules only allow CelebDF-v2 training data, use the EfficientNet
-baseline. If declared extra training data such as DFGC-21 is allowed, the
-ensemble/DINO variants can be used. Do not train on UCAS validation labels for a
-final submission unless the rules explicitly permit it.
+Example:
+
+```powershell
+python dinov3_dfgc_probe_ucas.py `
+  --dfgc-root datasets\DFGC-21-extracted `
+  --dfgc-json datasets\DFGC-21\bbox&landmarks.json `
+  --ucas-val datasets\UCAS_AISA\extracted\val `
+  --eff-val-cache ucas_artifact_adapter_output\feature_cache.npz `
+  --model-name vit_small_plus_patch16_dinov3_qkvb.lvd1689m `
+  --weights weights\dinov3_timm\vit_small_plus_patch16_dinov3_qkvb.lvd1689m.safetensors `
+  --out-dir dinov3_splus_dfgc_probe_output
+```
+
+Then search the fusion alpha:
+
+```powershell
+python dinov3_dfgc_alpha_search.py `
+  --out-dir dinov3_splus_dfgc_probe_output
+```
+
+Keep generated `.joblib`, `.npz`, and result JSON files local; they are not part
+of the public repository.
