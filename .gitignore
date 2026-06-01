@@ -1,0 +1,87 @@
+# Python/cache artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Local environments
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Datasets and downloaded archives
+datasets/
+data/
+downloads/
+Celeb-DF-v2.zip
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+
+# Model checkpoints and learned binary artifacts
+weights/
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.onnx
+*.joblib
+*.pkl
+*.pickle
+*.dat
+
+# Generated caches, predictions, submissions, and logs
+*.npz
+official_submit/
+invalid_val_trained/
+logs/
+dino_probe_output/
+dino_fewshot_output/
+discussion_vfm_probe*/
+PPT_REPORT_MATERIALS_VFM_LINEAR_PROBE/
+ucas_val_research/
+*_scores.json
+*_results.json
+ucas_test1_*.json
+dfgc21_*.json
+remote_robust_eval_results.json
+
+# Media and report artifacts produced from datasets
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.gif
+*.mp4
+*.avi
+*.mov
+*.pdf
+*.xlsx
+
+# Large/external dataset material in upstream repos
+DFGC_Detection/
+DFGC_starterkit/
+DFGC_Detection/data_preparation/data_structure/
+DFGC_Detection/data_preparation/dlib_model/
+DFGC_Detection/submission_Det/*.pth
+DFGC_starterkit/DFGC-21 dataset/
+
+# Nested upstream clone; clone it separately if needed.
+DeepfakesAdvTrack-Spring2026/
+
+# Local vendored/downloaded helper artifacts
+third_party/
+competition_info.txt
+VFM_LINEAR_PROBE_DEEPFAKE_REPORT.md
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
